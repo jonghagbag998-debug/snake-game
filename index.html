@@ -260,14 +260,23 @@ document.onkeydown=e=>{
   const k=e.key.toLowerCase();
   if(keyDir[k]){ const nd=keyDir[k]; if(snake?.length>1 && nd.x==-dir.x && nd.y==-dir.y) return;
     if(nd.x!=dir.x||nd.y!=dir.y) sTurn(); pdir=nd; e.preventDefault(); return }
-  if(k===' '){ if(isModalOpen()) $('mStart').click(); else (running?stop():start()); e.preventDefault(); return }
+  if (k === ' ') {
+  if (isModalOpen()) $('mStart').click();
+  else if (!snake || foods.length === 0) init(true);
+  else (running ? stop() : start());
+  e.preventDefault(); return;
+}
+
   if(k==='r'){ init(true); e.preventDefault() }
 };
 document.querySelectorAll('.pad [data-d]').forEach(b=>b.onclick=()=>{const m={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}},nd=m[b.dataset.d];
   if(snake.length>1 && nd.x==-dir.x && nd.y==-dir.y) return; if(nd.x!=dir.x||nd.y!=dir.y) sTurn(); pdir=nd });
 
-$('btnStart').onclick=()=>{ if(isModalOpen()) return; running?stop():start() };
-$('btnRestart').onclick=()=>init(true);
+$('btnStart').onclick = () => {
+  if (isModalOpen()) { $('mStart').click(); return; }
+  if (!snake || foods.length === 0) { init(true); return; }
+  running ? stop() : start();
+};
 
 // 첫 화면: 모달 오픈 + 기본 보드 렌더
 openModal(); resizeBoard(15); snake=[{x:7,y:7}]; prev=copy(snake); dir=pdir={x:1,y:0}; foods=[]; draw(0);
