@@ -2,41 +2,44 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>강아지 스네이크 (파스텔+보드사이즈+설정버튼)</title>
+<title>강아지 스네이크</title>
 <style>
 :root{
   --bg:#0b1220;--ui:#e5e7eb;--panel:#0f172a;
-  --tileA:#CDE7FF;--tileB:#B8F2E6;        /* 파스텔 기본 */
+  --tileA:#CDE7FF;--tileB:#B8F2E6;          /* 파스텔 기본 보드 */
   --dog1:#86e1ff;--dog2:#bfe8ff;--dogo:#0e7490;--tongue:#ef4444;
   --meat:#ffb085;--bone:#fff7ed
 }
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--ui);
-display:grid;grid-template-columns:1fr min(340px,36vw);font-family:system-ui,Segoe UI,Roboto,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ui);
+  display:grid;grid-template-columns:1fr min(340px,36vw);font-family:system-ui,Segoe UI,Roboto,sans-serif}
 h1{margin:0 0 .6rem;font-size:1.1rem}
 #stage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px}
 canvas{background:#000;border:2px solid #334155;border-radius:12px}
 .hud{display:flex;gap:1rem;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-top:.6rem}
-.btn{background:#334155;color:#fff;border:0;border-radius:10px;padding:.55rem 1rem;min-width:96px;cursor:pointer;font-weight:700}
+.btn{color:#fff;border:0;border-radius:10px;padding:.55rem 1rem;min-width:112px;cursor:pointer;font-weight:700}
+.btn-start{background:#34d399;}        /* 초록색 시작버튼 (파스텔) */
+.btn-gray{background:#334155;}
 .hint{font-size:.8rem;opacity:.75;text-align:center;margin-top:.25rem}
 .muted{opacity:.75;font-size:.92rem;align-self:center}
 aside{background:var(--panel);border-left:1px solid #223;padding:16px 14px;display:flex;flex-direction:column;gap:14px}
 .box{background:#0b1324;border:1px solid #213;border-radius:10px;padding:12px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:.4rem 0}
 .tip{font-size:.88rem;opacity:.75;line-height:1.4}
+
+/* 파스텔 스와치 */
 .swatch-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:6px}
 .swatch{height:26px;border-radius:6px;border:2px solid #243047;cursor:pointer}
 .swatch.active{outline:2px solid #fff;outline-offset:1px}
-.pad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:.4rem;margin-top:.4rem}
-.pad button{background:#1f2937;border:2px solid #334155;color:#cbd5e1;font-size:1rem;border-radius:10px}
-@media(min-width:720px){.pad{display:none}}
+
 /* 모달 */
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10}
 .modal{width:min(500px,92vw);background:#0f172a;border:1px solid #2b3350;border-radius:14px;padding:16px;box-shadow:0 10px 40px #0006}
 .radios{display:flex;gap:.6rem;flex-wrap:wrap}
 .radios label{display:flex;align-items:center;gap:.4rem;background:#0b1324;border:1px solid #223;padding:.45rem .6rem;border-radius:8px;cursor:pointer}
+select{width:100%;padding:.45rem;border-radius:8px;border:1px solid #233;background:#0b1324;color:var(--ui)}
 .ghost{background:#1b2541}
 .stack{display:flex;flex-direction:column;align-items:center}
-select{width:100%;padding:.45rem;border-radius:8px;border:1px solid #233;background:#0b1324;color:var(--ui)}
 </style>
 </head>
 <body>
@@ -49,40 +52,37 @@ select{width:100%;padding:.45rem;border-radius:8px;border:1px solid #233;backgro
       <div>최고: <b id="best">0</b></div>
 
       <div class="stack">
-        <button class="btn" id="btnStart">시작</button><div class="hint">(Space)</div>
+        <button class="btn btn-start" id="btnStart">게임 시작</button>
+        <div class="hint">(Space)</div>
       </div>
       <div class="stack">
-        <button class="btn" id="btnRestart">다시하기</button><div class="hint">(R)</div>
+        <button class="btn btn-gray" id="btnRestart">다시하기</button>
+        <div class="hint">(R)</div>
       </div>
       <span class="muted">방향키 / WASD</span>
-    </div>
-
-    <!-- 모바일 패드 -->
-    <div class="pad" aria-hidden="true">
-      <span></span><button data-d="up">▲</button><span></span>
-      <button data-d="left">◀</button><span></span><button data-d="right">▶</button>
-      <span></span><button data-d="down">▼</button><span></span>
     </div>
   </div>
 
   <aside>
     <div class="box">
-      <h3>체스판 색상 (파스텔 9색)</h3>
+      <h3>체스판 색상 (파스텔)</h3>
       <div class="row" style="flex-direction:column;align-items:stretch;gap:8px">
-        <div>타일 A</div>
-        <div id="swA" class="swatch-grid"></div>
+        <div>타일 A</div><div id="swA" class="swatch-grid"></div>
       </div>
       <div class="row" style="flex-direction:column;align-items:stretch;gap:8px">
-        <div>타일 B</div>
-        <div id="swB" class="swatch-grid"></div>
+        <div>타일 B</div><div id="swB" class="swatch-grid"></div>
       </div>
-      <div class="row" style="justify-content:flex-end"><button class="btn" id="reset">초기화</button></div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn btn-gray" id="reset">초기화</button>
+      </div>
     </div>
 
     <div class="box">
       <h3>도움말</h3>
-      <p class="tip">시작 팝업에서 <b>먹이 개수 / 난이도 / 게임판 크기</b>를 정한 뒤 시작하세요. 속도는 난이도로 고정됩니다.</p>
-      <div class="row" style="justify-content:flex-end"><button class="btn" id="openSettings">설정</button></div>
+      <p class="tip">설정 팝업에서 <b>먹이 개수 / 난이도 / 게임판 크기</b>를 정한 뒤 시작하세요. 속도는 난이도로 고정됩니다.</p>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn btn-gray" id="openSettings">설정</button>
+      </div>
     </div>
   </aside>
 
@@ -94,95 +94,89 @@ select{width:100%;padding:.45rem;border-radius:8px;border:1px solid #233;backgro
       <div class="row" style="flex-direction:column;align-items:flex-start">
         <label for="foodCnt">동시에 등장하는 먹이 (1~10)</label>
         <select id="foodCnt">
-          <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option>
-          <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+          <option>1</option><option>2</option><option selected>3</option>
+          <option>4</option><option>5</option><option>6</option>
+          <option>7</option><option>8</option><option>9</option><option>10</option>
         </select>
       </div>
 
       <div class="row" style="flex-direction:column;align-items:flex-start">
         <label for="boardSize">게임판 크기</label>
         <select id="boardSize">
-          <option>7×7</option><option>10×10</option><option selected>15×15</option>
-          <option>20×20</option><option>25×25</option>
+          <option>7×7</option><option>10×10</option>
+          <option selected>15×15</option><option>20×20</option><option>25×25</option>
         </select>
       </div>
 
       <div style="margin:.3rem 0 .6rem">난이도</div>
       <div class="radios" id="diff">
-        <label><input type="radio" name="d" value="easy" checked>Easy(느림)</label>
-        <label><input type="radio" name="d" value="medium">Medium(중간)</label>
-        <label><input type="radio" name="d" value="hard">Hard(빠름)</label>
+        <label><input type="radio" name="d" value="easy" checked>Easy</label>
+        <label><input type="radio" name="d" value="medium">Medium</label>
+        <label><input type="radio" name="d" value="hard">Hard</label>
       </div>
 
       <div class="row" style="justify-content:flex-end;margin-top:10px">
         <button class="btn ghost" id="mCancel">취소</button>
-        <button class="btn" id="mStart">게임 시작</button>
+        <button class="btn btn-start" id="mStart">게임 시작</button>
       </div>
-      <p class="tip" style="margin:.4rem 0 0">Space로도 시작 가능. R키로 같은 설정으로 재시작.</p>
+      <p class="tip" style="margin:.4rem 0 0">Space로도 시작 가능, R키로 재시작</p>
     </div>
   </div>
 
 <script>
-(()=>{ // ===== helpers & constants =====
+(()=>{ // ===== shortcuts & constants =====
 const $=id=>document.getElementById(id), CSS=document.documentElement.style;
-const SPD={easy:6,medium:9,hard:13};                     // 고정 속도
-const PASTEL=[                                           // 9색 파스텔
-  ['크림','#FFF1C1'],['민트','#B8F2E6'],['하늘','#CDE7FF'],
-  ['라일락','#E9D5FF'],['코랄','#FFC9C9'],['복숭아','#FFD6A5'],
-  ['레몬','#FEF08A'],['새벽초록','#CDE9D6'],['연회색','#D1D5DB']
-];
+const SPD={easy:6,medium:9,hard:13};
+const PASTEL=[['크림','#FFF1C1'],['민트','#B8F2E6'],['하늘','#CDE7FF'],['라일락','#E9D5FF'],['코랄','#FFC9C9'],['복숭아','#FFD6A5'],['레몬','#FEF08A'],['초록','#CDE9D6'],['회색','#D1D5DB']];
 
+// ===== canvas & board =====
 const cv=$('cv'), g=cv.getContext('2d',{alpha:false});
 let COL=15, ROW=15, CELL=28, CW=COL*CELL, CH=ROW*CELL;
-function resizeBoard(size){            // size = 7|10|15|20|25
-  COL=ROW=size; CELL=Math.floor(420/size); CW=COL*CELL; CH=ROW*CELL;
-  cv.width=CW; cv.height=CH;
-}
+function resizeBoard(size){ COL=ROW=size; CELL=Math.floor(420/size); CW=COL*CELL; CH=ROW*CELL; cv.width=CW; cv.height=CH; }
 
+// ===== UI refs =====
 const scoreEl=$('score'), bestEl=$('best'), bStart=$('btnStart'), bRestart=$('btnRestart');
 const modal=$('modal'), mStart=$('mStart'), mCancel=$('mCancel'), foodSel=$('foodCnt'), diffWrap=$('diff'), boardSel=$('boardSize');
-const openSettings=$('openSettings'), resetBtn=$('reset');
+const openSettings=$('openSettings'), resetBtn=$('reset'), swA=$('swA'), swB=$('swB');
 
-// ===== swatch color picker (타일 A/B) =====
-function buildSwatches(containerId, cssVar, initial){
-  const box=$(containerId); box.innerHTML='';
-  PASTEL.forEach(([label,hex],i)=>{
+// ===== pastel swatches =====
+function buildSwatches(container, cssVar, initialHex){
+  container.innerHTML='';
+  PASTEL.forEach(([label,hex])=>{
     const b=document.createElement('button');
     b.className='swatch'; b.title=label; b.style.background=hex;
-    if((getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim()||initial)===hex) b.classList.add('active');
-    b.onclick=()=>{ [...box.children].forEach(x=>x.classList.remove('active')); b.classList.add('active');
-      CSS.setProperty(cssVar, hex); draw(0); };
-    box.appendChild(b);
+    if((getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim()||initialHex)===hex) b.classList.add('active');
+    b.onclick=()=>{ [...container.children].forEach(x=>x.classList.remove('active')); b.classList.add('active'); CSS.setProperty(cssVar,hex); draw(0); };
+    container.appendChild(b);
   });
 }
-buildSwatches('swA','--tileA','#CDE7FF');
-buildSwatches('swB','--tileB','#B8F2E6');
-resetBtn.onclick=()=>{ CSS.setProperty('--tileA','#CDE7FF'); CSS.setProperty('--tileB','#B8F2E6');
-  buildSwatches('swA','--tileA','#CDE7FF'); buildSwatches('swB','--tileB','#B8F2E6'); draw(0); };
+buildSwatches(swA,'--tileA','#CDE7FF');
+buildSwatches(swB,'--tileB','#B8F2E6');
+resetBtn.onclick=()=>{ CSS.setProperty('--tileA','#CDE7FF'); CSS.setProperty('--tileB','#B8F2E6'); buildSwatches(swA,'--tileA','#CDE7FF'); buildSwatches(swB,'--tileB','#B8F2E6'); draw(0); };
 
-// ===== state =====
+// ===== state & audio =====
 let best=+localStorage.getItem('dog-snake-best')||0; bestEl.textContent=best;
 let running=false,snake,prev,dir,pdir,foods=[],score=0,speed=SPD.easy,last=0,acc=0,tongue=0;
 const AC=window.AudioContext||window.webkitAudioContext; let ac;
 const beep=(f=600,d=0.07,type='square',v=0.2)=>{ (ac||(ac=new AC())).resume&&ac.resume();
-  const t=ac.currentTime,o=ac.createOscillator(),q=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+  const t=ac.currentTime,o=ac.createOscillator(),q=ac.createGain(); o.type=type;o.frequency.setValueAtTime(f,t);
   q.gain.setValueAtTime(0,t);q.gain.linearRampToValueAtTime(v,t+.01);q.gain.exponentialRampToValueAtTime(.0001,t+d);
-  o.connect(q).connect(ac.destination);o.start(t);o.stop(t+d)};
-const sTurn=()=>beep(520,.05,'triangle',.15), sEat=()=>{beep(420,.07,'sine',.24);setTimeout(()=>beep(640,.07,'sine',.24),60)};
+  o.connect(q).connect(ac.destination); o.start(t); o.stop(t+d); };
+const sTurn=()=>beep(520,.05,'triangle',.15), sEat=()=>{beep(420,.07,'sine',.24); setTimeout(()=>beep(640,.07,'sine',.24),60);};
 
-// ===== game core =====
+// ===== core helpers =====
+const R=n=>Math.floor(Math.random()*n);
 function copy(a){ return a.map(p=>({x:p.x,y:p.y})) }
-const R= n=>Math.floor(Math.random()*n);
-function spawn(){ while(1){ const p={x:R(COL),y:R(ROW)};
-  if(!snake?.some(s=>s.x==p.x&&s.y==p.y) && !foods.some(f=>f.x==p.x&&f.y==p.y)) return p; } }
-function board(){ const cs=getComputedStyle(document.documentElement),A=cs.getPropertyValue('--tileA').trim(),B=cs.getPropertyValue('--tileB').trim();
-  for(let y=0;y<ROW;y++)for(let x=0;x<COL;x++){ g.fillStyle=((x+y)&1)?B:A; g.fillRect(x*CELL,y*CELL,CELL,CELL) } }
+function spawn(){ while(1){ const p={x:R(COL),y:R(ROW)}; if(!snake?.some(s=>s.x==p.x&&s.y==p.y) && !foods.some(f=>f.x==p.x&&f.y==p.y)) return p; } }
+function board(){
+  const cs=getComputedStyle(document.documentElement),A=cs.getPropertyValue('--tileA').trim(),B=cs.getPropertyValue('--tileB').trim();
+  for(let y=0;y<ROW;y++)for(let x=0;x<COL;x++){ g.fillStyle=((x+y)&1)?B:A; g.fillRect(x*CELL,y*CELL,CELL,CELL) }
+}
 const lerp=(a,b,t)=>a+(b-a)*t;
-
 function circle(cx,cy,r,fill,sw=0,sc='#000'){ if(fill){g.fillStyle=fill; g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.fill()}
   if(sw){g.strokeStyle=sc; g.lineWidth=sw; g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.stroke()} }
 function grad(cx,cy,r,dx,dy){ const q=g.createRadialGradient(cx-2*dx,cy-2*dy,r*.35,cx,cy,r);
-  q.addColorStop(0,getComputedStyle(document.documentElement).getPropertyValue('--dog1')); 
+  q.addColorStop(0,getComputedStyle(document.documentElement).getPropertyValue('--dog1'));
   q.addColorStop(1,getComputedStyle(document.documentElement).getPropertyValue('--dog2')); return q }
 function ear(x,y,d,left){ g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--dog2');
   g.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--dogo'); g.lineWidth=2; const s=6;
@@ -193,93 +187,92 @@ function ear(x,y,d,left){ g.fillStyle=getComputedStyle(document.documentElement)
 function head(x,y,d){ const r=CELL*.46,cx=x+CELL/2,cy=y+CELL/2,ox=getComputedStyle(document.documentElement).getPropertyValue('--dogo');
   circle(cx,cy,r,grad(cx,cy,r,d.x,d.y),2,ox);
   const eo=6,es=7,ex1=cx+(-d.y)*es+d.x*eo,ey1=cy+( d.x)*es+d.y*eo,ex2=cx+( d.y)*es+d.x*eo,ey2=cy+(-d.x)*es+d.y*eo;
-  circle(ex1,ey1,4,'#fff'); circle(ex2,ey2,4,'#fff'); circle(ex1+d.x*1.8,ey1+d.y*1.8,2,'#0b1220'); circle(ex2+d.x*1.8,ey2+d.y*1.8,2,'#0b1220');
-  circle(cx+d.x*(r*.55),cy+d.y*(r*.55),3,'#111827'); ear(cx - d.x*6 + (-d.y)*6, cy - d.y*6 + ( d.x)*6, d,true);
+  circle(ex1,ey1,4,'#fff');circle(ex2,ey2,4,'#fff');circle(ex1+d.x*1.8,ey1+d.y*1.8,2,'#0b1220');circle(ex2+d.x*1.8,ey2+d.y*1.8,2,'#0b1220');
+  circle(cx+d.x*(r*.55),cy+d.y*(r*.55),3,'#111827');
+  ear(cx - d.x*6 + (-d.y)*6, cy - d.y*6 + ( d.x)*6, d,true);
   ear(cx - d.x*6 + ( d.y)*6, cy - d.y*6 + (-d.x)*6, d,false);
   if((Math.floor(tongue*5)%5)==0){ g.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--tongue'); g.lineWidth=2;
     const tx=cx+d.x*(r+2),ty=cy+d.y*(r+2); g.beginPath(); g.moveTo(tx,ty); g.lineTo(tx+d.x*7,ty+d.y*7); g.stroke();
     g.beginPath(); g.moveTo(tx+d.x*7,ty+d.y*7); g.lineTo(tx+d.x*9 + d.y*2,ty+d.y*9 - d.x*2);
-    g.moveTo(tx+d.x*7,ty+d.y*7); g.lineTo(tx+d.x*9 - d.y*2,ty+d.y*9 + d.x*2); g.stroke() }
+    g.moveTo(tx+d.x*7,ty+d.y*7); g.lineTo(tx+d.x*9 - d.y*2,ty+d.y*9 + d.x*2); g.stroke(); }
 }
-function body(x,y){ const r=CELL*.42,cx=x+CELL/2,cy=y+CELL/2; circle(cx,cy,r,grad(cx,cy,r,0,0),2,getComputedStyle(document.documentElement).getPropertyValue('--dogo'));
-  circle(cx+2,cy-2,2,'rgba(255,255,255,.08)') }
-function meat(cx,cy){ const x=cx*CELL,y=cy*CELL,s=CELL,cx2=x+s/2,cy2=y+s/2;
+function body(x,y){ const r=CELL*.42,cx=x+CELL/2,cy=y+CELL/2; circle(cx,cy,r,grad(cx,cy,r,0,0),2,getComputedStyle(document.documentElement).getPropertyValue('--dogo')) }
+function meat(cx,cy){
+  const x=cx*CELL,y=cy*CELL,s=CELL,cx2=x+s/2,cy2=y+s/2;
   g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--meat');
   g.beginPath(); g.ellipse(cx2-s*.1,cy2,s*.3,s*.22,0,0,Math.PI*2); g.fill();
   g.strokeStyle='rgba(0,0,0,.45)'; g.lineWidth=2; g.stroke();
   g.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--bone'); g.lineWidth=5;
   g.beginPath(); g.moveTo(cx2+s*.05,cy2); g.lineTo(cx2+s*.3,cy2); g.stroke();
-  g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--bone'); g.beginPath(); g.arc(cx2+s*.28,cy2,s*.14,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(cx2+s*.38,cy2,s*.10,0,Math.PI*2); g.fill();
-  g.fillStyle='rgba(255,255,255,.18)'; g.beginPath(); g.ellipse(cx2-s*.18,cy2-3,s*.10,s*.07,-.3,0,Math.PI*2); g.fill()
+  g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--bone');
+  g.beginPath(); g.arc(cx2+s*.28,cy2,s*.14,0,Math.PI*2); g.fill();
 }
 
-function draw(t=0){
-  board(); foods.forEach(f=>meat(f.x,f.y));
-  for(let i=snake.length-1;i>=0;i--){ const c=snake[i], p=prev[i]||c, x=(p.x+(c.x-p.x)*t)*CELL, y=(p.y+(c.y-p.y)*t)*CELL; i?body(x,y):head(x,y,dir) }
-}
-
+// ===== game cycle =====
+function draw(t=0){ board(); foods.forEach(f=>meat(f.x,f.y));
+  for(let i=snake.length-1;i>=0;i--){ const c=snake[i], p=prev[i]||c, x=(p.x+(c.x-p.x)*t)*CELL, y=(p.y+(c.y-p.y)*t)*CELL; i?body(x,y):head(x,y,dir) } }
 function update(){
   dir=pdir; const nx=snake[0].x+dir.x, ny=snake[0].y+dir.y;
   if(nx<0||ny<0||nx>=COL||ny>=ROW) return gameOver();
   const head={x:nx,y:ny}; if(snake.some((s,i)=>i&&s.x==nx&&s.y==ny)) return gameOver();
   snake.unshift(head);
   const k=foods.findIndex(f=>f.x==nx&&f.y==ny);
-  if(k>-1){ scoreEl.textContent=++score; sEat(); foods.splice(k,1); foods.push(spawn()); } else snake.pop();
+  if(k>-1){ scoreEl.textContent=++score; sEat(); foods.splice(k,1); foods.push(spawn()); }
+  else snake.pop();
 }
-
-let last=0;
 function loop(ts){ if(!running) return; const dt=(ts-last)/1000; last=ts; acc+=dt; tongue+=dt; const step=1/speed;
   while(acc>=step){ prev=copy(snake); update(); acc-=step } draw(acc/step); requestAnimationFrame(loop) }
 
 function start(){ running=true; bStart.textContent='일시정지'; (ac||(ac=new AC())).resume?.(); last=performance.now(); requestAnimationFrame(loop) }
-function stop(){ running=false; bStart.textContent='시작' }
+function stop(){ running=false; bStart.textContent='게임 시작' }
 function gameOver(){ stop(); best=Math.max(best,score); bestEl.textContent=best; localStorage.setItem('dog-snake-best',best); alert(`게임 오버! 점수: ${score}`) }
 
-// ===== init / settings =====
 function init(startNow=false){
-  // 보드 크기 반영
-  const szTxt=boardSel.value||'15×15', sz=+szTxt.split('×')[0]; resizeBoard(sz);
-  // 난이도/속도
+  // 보드 크기
+  const sz=+(boardSel.value||'15×15').split('×')[0]; resizeBoard(sz);
+  // 속도
   speed=SPD[(diffWrap.querySelector('input[name="d"]:checked')||{value:'easy'}).value];
   // 먹이
   foods.length=0; for(let i=(+foodSel.value||3); i--;) foods.push(spawn());
   // 뱀
   snake=[{x:Math.floor(COL/2),y:Math.floor(ROW/2)}]; dir=pdir={x:1,y:0}; prev=copy(snake);
-  // 스코어/상태
-  score=0; scoreEl.textContent=0; acc=0; tongue=0; draw(0); if(startNow) start();
+  // 점수/상태
+  score=0; scoreEl.textContent=0; acc=0; tongue=0; draw(0);
+  if(startNow) start();
 }
 
+// ===== controls =====
 const isModalOpen=()=>modal.style.display!=='none', openModal=()=>modal.style.display='flex', closeModal=()=>modal.style.display='none';
-$('mStart').onclick=()=>{ closeModal(); init(true) };
-$('mCancel').onclick=()=>closeModal();
-$('openSettings').onclick=()=>openModal();
 
+// 핵심: 시작 버튼은 어떤 상태든 "정상 시작" 보장
+bStart.onclick=()=>{
+  if(isModalOpen()){ mStart.click(); return; }           // 모달 열려있으면 설정 반영 후 시작
+  if(!snake || foods.length===0){ init(true); return; }  // 초기화 안돼있으면 즉시 init+start
+  running ? stop() : start();                             // 그 외엔 토글
+};
+bRestart.onclick=()=>init(true);
+openSettings.onclick=()=>openModal();
+mCancel.onclick=()=>closeModal();
+mStart.onclick=()=>{ closeModal(); init(true); };
+
+// 키보드도 동일하게 동작
 const keyDir={arrowup:{x:0,y:-1},w:{x:0,y:-1},arrowdown:{x:0,y:1},s:{x:0,y:1},arrowleft:{x:-1,y:0},a:{x:-1,y:0},arrowright:{x:1,y:0},d:{x:1,y:0}};
 document.onkeydown=e=>{
   const k=e.key.toLowerCase();
-  if(keyDir[k]){ const nd=keyDir[k]; if(snake?.length>1 && nd.x==-dir.x && nd.y==-dir.y) return;
-    if(nd.x!=dir.x||nd.y!=dir.y) sTurn(); pdir=nd; e.preventDefault(); return }
-  if (k === ' ') {
-  if (isModalOpen()) $('mStart').click();
-  else if (!snake || foods.length === 0) init(true);
-  else (running ? stop() : start());
-  e.preventDefault(); return;
-}
-
-  if(k==='r'){ init(true); e.preventDefault() }
-};
-document.querySelectorAll('.pad [data-d]').forEach(b=>b.onclick=()=>{const m={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}},nd=m[b.dataset.d];
-  if(snake.length>1 && nd.x==-dir.x && nd.y==-dir.y) return; if(nd.x!=dir.x||nd.y!=dir.y) sTurn(); pdir=nd });
-
-$('btnStart').onclick = () => {
-  if (isModalOpen()) { $('mStart').click(); return; }
-  if (!snake || foods.length === 0) { init(true); return; }
-  running ? stop() : start();
+  if(keyDir[k]){ const nd=keyDir[k]; if(snake?.length>1 && nd.x==-dir.x && nd.y==-dir.y) return; if(nd.x!=dir.x||nd.y!=dir.y) sTurn(); pdir=nd; e.preventDefault(); return; }
+  if(k===' '){
+    if(isModalOpen()) mStart.click();
+    else if(!snake || foods.length===0) init(true);
+    else (running?stop():start());
+    e.preventDefault(); return;
+  }
+  if(k==='r'){ init(true); e.preventDefault(); }
 };
 
-// 첫 화면: 모달 오픈 + 기본 보드 렌더
-openModal(); resizeBoard(15); snake=[{x:7,y:7}]; prev=copy(snake); dir=pdir={x:1,y:0}; foods=[]; draw(0);
+// ===== first paint =====
+openModal();              // 처음엔 설정 팝업 표시
+resizeBoard(15);          // 기본 미리보기용 보드
+snake=[{x:7,y:7}]; prev=copy(snake); dir=pdir={x:1,y:0}; foods=[]; draw(0);
 })();
 </script>
 </body>
