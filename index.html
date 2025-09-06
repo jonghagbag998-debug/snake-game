@@ -1,96 +1,60 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>강아지 스네이크 (설정 팝업)</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>강아지 스네이크 (경량 최적화)</title>
 <style>
-  :root{
-    --bg:#0b1220;
-    --tileA:#223049;      /* 체스판 색 A (초기값) */
-    --tileB:#1a2438;      /* 체스판 색 B (초기값) */
-    --dog-body:#7dd3fc;   /* 몸통 기본 */
-    --dog-head:#38bdf8;   /* 머리 하이라이트 */
-    --dog-outline:#0e7490;
-    --tongue:#ef4444;
-    --meat:#d97706;       /* 고기 */
-    --meat-fat:#fff7ed;   /* 지방/뼈 */
-    --ui:#e5e7eb;
-    --panel:#0f172a;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; min-height:100vh; background:var(--bg);
-    color:var(--ui); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    display:grid; gap:0;
-    grid-template-columns: 1fr min(320px, 35vw);
-  }
-  #stage-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:14px;}
-  h1{margin:0 0 .5rem; font-size:1.1rem; font-weight:700; opacity:.9}
-  canvas{background:black; border:2px solid #334155; border-radius:12px; image-rendering:pixelated}
-  .hud{display:flex; gap:1.2rem; align-items:flex-start; justify-content:center; flex-wrap:wrap; margin-top:.6rem}
-  .btnwrap{display:flex; flex-direction:column; align-items:center; gap:.25rem}
-  .btn{background:#334155; color:white; border:none; border-radius:10px; padding:.55rem 1rem; cursor:pointer; font-weight:700; min-width:96px; text-align:center}
-  .btn:active{transform:translateY(1px)}
-  .hint{font-size:.8rem; opacity:.75}
-  .muted{opacity:.75; font-size:.92rem; align-self:center}
-  .pad{display:grid; grid-template-columns:repeat(3,56px); grid-template-rows:repeat(3,56px); gap:.4rem; margin:.4rem 0 0}
-  .pad button{background:#1f2937; border:2px solid #334155; color:#cbd5e1; font-size:1rem; border-radius:10px}
-  @media(min-width:720px){ .pad{display:none} }
-
-  /* 사이드 패널 */
-  aside{
-    background:var(--panel); border-left:1px solid #223; padding:16px 14px;
-    display:flex; flex-direction:column; gap:14px;
-  }
-  .panel-group{background:#0b1324; border:1px solid #213; border-radius:10px; padding:12px}
-  .panel-group h3{margin:0 0 .5rem; font-size:.98rem}
-  .row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:.4rem 0}
-  .row label{font-size:.92rem; opacity:.9}
-  select{width:160px; padding:.4rem .5rem; background:#111a2d; border:1px solid #233; color:#e5e7eb; border-radius:8px}
-  .tip{font-size:.88rem; opacity:.75; line-height:1.4}
-
-  /* 시작 설정 모달 */
-  .modal-backdrop{
-    position:fixed; inset:0; background:rgba(0,0,0,0.6);
-    display:flex; align-items:center; justify-content:center; z-index:1000;
-  }
-  .modal{
-    width:min(480px, 92vw); background:#0f172a; border:1px solid #2b3350; border-radius:14px;
-    padding:16px; box-shadow:0 10px 40px rgba(0,0,0,0.4);
-  }
-  .modal h2{margin:0 0 .6rem; font-size:1.1rem}
-  .modal .row{margin:.5rem 0}
-  .modal select{width:100%}
-  .modal .radios{display:flex; gap:.6rem; flex-wrap:wrap}
-  .modal .radios label{display:flex; align-items:center; gap:.4rem; background:#0b1324; border:1px solid #223; padding:.45rem .6rem; border-radius:8px; cursor:pointer}
-  .modal .actions{display:flex; gap:.6rem; justify-content:flex-end; margin-top:1rem}
-  .ghost{background:#1b2541}
+:root{
+  --bg:#0b1220;--ui:#e5e7eb;--panel:#0f172a;
+  --tileA:#223049;--tileB:#1a2438;
+  --dog1:#38bdf8;--dog2:#7dd3fc;--dogo:#0e7490;--tongue:#ef4444;
+  --meat:#d97706;--bone:#fff7ed
+}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--ui);
+display:grid;grid-template-columns:1fr min(320px,35vw);font-family:system-ui,Segoe UI,Roboto,sans-serif}
+h1{margin:0 0 .6rem;font-size:1.1rem}
+#stage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px}
+canvas{background:#000;border:2px solid #334155;border-radius:12px;image-rendering:pixelated}
+.hud{display:flex;gap:1rem;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-top:.6rem}
+.btn{background:#334155;color:#fff;border:0;border-radius:10px;padding:.55rem 1rem;min-width:96px;cursor:pointer;font-weight:700}
+.hint{font-size:.8rem;opacity:.75;text-align:center;margin-top:.25rem}
+.muted{opacity:.75;font-size:.92rem;align-self:center}
+aside{background:var(--panel);border-left:1px solid #223;padding:16px 14px;display:flex;flex-direction:column;gap:14px}
+.box{background:#0b1324;border:1px solid #213;border-radius:10px;padding:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:.4rem 0}
+select{width:160px;padding:.4rem .5rem;background:#111a2d;border:1px solid #233;color:var(--ui);border-radius:8px}
+.tip{font-size:.88rem;opacity:.75;line-height:1.4}
+.pad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:.4rem;margin-top:.4rem}
+.pad button{background:#1f2937;border:2px solid #334155;color:#cbd5e1;font-size:1rem;border-radius:10px}
+@media(min-width:720px){.pad{display:none}}
+/* 모달 */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10}
+.modal{width:min(480px,92vw);background:#0f172a;border:1px solid #2b3350;border-radius:14px;padding:16px;box-shadow:0 10px 40px #0006}
+.radios{display:flex;gap:.6rem;flex-wrap:wrap}
+.radios label{display:flex;align-items:center;gap:.4rem;background:#0b1324;border:1px solid #223;padding:.45rem .6rem;border-radius:8px;cursor:pointer}
+.ghost{background:#1b2541}
+.stack{display:flex;flex-direction:column;align-items:center}
 </style>
 </head>
 <body>
-  <div id="stage-wrap">
+  <div id="stage">
     <h1>강아지 스네이크 🐶🍖</h1>
-    <canvas id="game" width="420" height="420" aria-label="게임 캔버스"></canvas>
+    <canvas id="cv" width="420" height="420" aria-label="game"></canvas>
 
     <div class="hud">
-      <div>점수: <strong id="score">0</strong></div>
-      <div>최고: <strong id="best">0</strong></div>
+      <div>점수: <b id="score">0</b></div>
+      <div>최고: <b id="best">0</b></div>
 
-      <div class="btnwrap">
-        <button class="btn" id="toggle">시작</button>
-        <div class="hint">(Space)</div>
+      <div class="stack">
+        <button class="btn" id="btnStart">시작</button><div class="hint">(Space)</div>
       </div>
-
-      <div class="btnwrap">
-        <button class="btn" id="restart">다시하기</button>
-        <div class="hint">(R)</div>
+      <div class="stack">
+        <button class="btn" id="btnRestart">다시하기</button><div class="hint">(R)</div>
       </div>
-
       <span class="muted">방향키 / WASD</span>
     </div>
 
-    <!-- 모바일 방향패드 -->
+    <!-- 모바일 패드 -->
     <div class="pad" aria-hidden="true">
       <span></span><button data-d="up">▲</button><span></span>
       <button data-d="left">◀</button><span></span><button data-d="right">▶</button>
@@ -99,366 +63,158 @@
   </div>
 
   <aside>
-    <div class="panel-group">
-      <h3>체스판 색상 (9색 제한)</h3>
-      <div class="row">
-        <label for="selA">타일 A</label>
-        <select id="selA"></select>
-      </div>
-      <div class="row">
-        <label for="selB">타일 B</label>
-        <select id="selB"></select>
-      </div>
-      <div class="row" style="justify-content:flex-end">
-        <button class="btn" id="resetColors">초기화</button>
-      </div>
-      <p class="tip">흰/검처럼 밝기 차가 큰 조합이 가장 잘 보입니다.</p>
+    <div class="box">
+      <h3>체스판 색상 (9색)</h3>
+      <div class="row"><label for="selA">타일 A</label>
+        <select id="selA"></select></div>
+      <div class="row"><label for="selB">타일 B</label>
+        <select id="selB"></select></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn" id="reset">초기화</button></div>
+      <p class="tip">흰/검처럼 대비 큰 조합이 가장 잘 보여요.</p>
     </div>
-    <div class="panel-group">
-      <h3>도움말</h3>
-      <p class="tip">스페이스로 시작/일시정지, R키로 다시하기. 벽에 부딪히면 게임오버. 최고 점수는 브라우저에 저장돼요.</p>
+    <div class="box"><h3>도움말</h3>
+      <p class="tip">설정 팝업에서 먹이 개수와 난이도를 고른 뒤 게임을 시작하세요. 속도는 고른 난이도로 고정돼요.</p>
     </div>
   </aside>
 
   <!-- 시작 설정 모달 -->
-  <div class="modal-backdrop" id="startModal">
+  <div class="backdrop" id="modal">
     <div class="modal">
       <h2>게임 시작 설정</h2>
-      <div class="row">
-        <label for="foodCount">동시에 등장하는 먹이 개수 (1~10)</label>
-        <select id="foodCount">
-          <!-- JS로 1~10 채움 -->
+      <div class="row" style="flex-direction:column;align-items:flex-start">
+        <label for="foodCnt">동시에 등장하는 먹이 (1~10)</label>
+        <select id="foodCnt" style="width:100%">
+          <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option>
+          <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
         </select>
       </div>
-      <div class="row">
-        <div style="margin-bottom:.25rem">난이도</div>
-        <div class="radios" id="difficulty">
-          <label><input type="radio" name="diff" value="easy"   checked> Easy (느림)</label>
-          <label><input type="radio" name="diff" value="medium"> Medium (중간)</label>
-          <label><input type="radio" name="diff" value="hard"> Hard (빠름)</label>
-        </div>
+      <div style="margin:.3rem 0 .6rem">난이도</div>
+      <div class="radios" id="diff">
+        <label><input type="radio" name="d" value="easy" checked>Easy(느림)</label>
+        <label><input type="radio" name="d" value="medium">Medium(중간)</label>
+        <label><input type="radio" name="d" value="hard">Hard(빠름)</label>
       </div>
-      <div class="actions">
-        <button class="btn ghost" id="modalCancel">취소</button>
-        <button class="btn" id="modalStart">게임 시작</button>
+      <div class="row" style="justify-content:flex-end;margin-top:10px">
+        <button class="btn ghost" id="mCancel">취소</button>
+        <button class="btn" id="mStart">게임 시작</button>
       </div>
-      <p class="tip" style="margin-top:.4rem">언제든 R키로 설정을 유지한 채 다시 시작할 수 있어요.</p>
+      <p class="tip" style="margin:.4rem 0 0">Space로도 시작 가능. R키로 같은 설정으로 재시작.</p>
     </div>
   </div>
 
 <script>
-(() => {
-  // ===== 기본 보드/렌더 설정 =====
-  const cell = 20, cols = 20, rows = 20;
-  const w = cols * cell, h = rows * cell;
-  const cvs = document.getElementById('game');
-  const ctx = cvs.getContext('2d', { alpha:false });
-  cvs.width = w; cvs.height = h;
-
-  // HUD
-  const scoreEl = document.getElementById('score');
-  const bestEl  = document.getElementById('best');
-  const toggleBtn = document.getElementById('toggle');
-  const restartBtn= document.getElementById('restart');
-
-  const bestKey = 'dog-snake-best';
-  let best = Number(localStorage.getItem(bestKey) || 0);
-  bestEl.textContent = best;
-
-  // ===== 설정(팝업) =====
-  const modal = document.getElementById('startModal');
-  const foodCountSel = document.getElementById('foodCount');
-  const diffWrap = document.getElementById('difficulty');
-  const modalStart = document.getElementById('modalStart');
-  const modalCancel= document.getElementById('modalCancel');
-
-  for(let i=1;i<=10;i++){
-    const opt=document.createElement('option');
-    opt.value=i; opt.textContent=`${i}개`;
-    foodCountSel.appendChild(opt);
+(()=>{ // ===== helpers =====
+const $=id=>document.getElementById(id), C=document.documentElement.style;
+const cv=$('cv'), g=cv.getContext('2d',{alpha:false}), W=420,H=420,CELL=20,COL=W/CELL,ROW=H/CELL;
+const PRE=[['흰','#fff'],['검','#000'],['빨','#f00'],['주','#f70'],['노','#ff0'],['초','#0f0'],['파','#00f'],['남','#008'],['보','#808']];
+const fillSel=(sel,hex)=>{sel.innerHTML=PRE.map(([n,h])=>`<option value="${h}"${(hex||'').toLowerCase()==h?' selected':''}>${n} (${h})</option>`).join('')};
+const rand=n=>Math.floor(Math.random()*n);
+const beep=(f=600,d=0.07,type='square',v=0.2)=>{(ac||(ac=new (window.AudioContext||window.webkitAudioContext))).resume&&ac.resume();
+  const t=ac.currentTime,o=ac.createOscillator(),q=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+  q.gain.setValueAtTime(0,t);q.gain.linearRampToValueAtTime(v,t+.01);q.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(q).connect(ac.destination);o.start(t);o.stop(t+d)};
+const sTurn=()=>beep(520,.05,'triangle',.15), sEat=()=>{beep(420,.07,'sine',.24);setTimeout(()=>beep(640,.07,'sine',.24),60)};
+let ac;
+// ===== UI refs =====
+const scoreEl=$('score'), bestEl=$('best'), bStart=$('btnStart'), bRestart=$('btnRestart');
+const modal=$('modal'), mStart=$('mStart'), mCancel=$('mCancel'), foodSel=$('foodCnt'), diffWrap=$('diff');
+const selA=$('selA'), selB=$('selB'), reset=$('reset');
+// init selects
+fillSel(selA,getComputedStyle(document.documentElement).getPropertyValue('--tileA').trim()||'#223049');
+fillSel(selB,getComputedStyle(document.documentElement).getPropertyValue('--tileB').trim()||'#1a2438');
+selA.onchange=e=>{C.setProperty('--tileA',e.target.value); draw(0)}
+selB.onchange=e=>{C.setProperty('--tileB',e.target.value); draw(0)}
+reset.onclick=()=>{C.setProperty('--tileA','#223049');C.setProperty('--tileB','#1a2438');fillSel(selA,'#223049');fillSel(selB,'#1a2438');draw(0)}
+// ===== game state =====
+const SPD={easy:6,medium:9,hard:13};
+let best=+localStorage.getItem('dog-snake-best')||0; bestEl.textContent=best;
+let running=false,snake,prev,dir,pdir,foods=[],score=0,speed=SPD.easy,last=0,acc=0,tongue=0;
+// ===== core =====
+const openM=()=>modal.style.display='flex',closeM=()=>modal.style.display='none',isM=()=>modal.style.display!=='none';
+function init(startNow=false){
+  foods.length=0; for(let i=+foodSel.value||3;i--;) foods.push(spawn());
+  score=0; scoreEl.textContent=0; speed=SPD[(diffWrap.querySelector('input[name="d"]:checked')||{value:'easy'}).value];
+  snake=[{x:10,y:10}]; dir=pdir={x:1,y:0}; prev=copy(snake); acc=0; tongue=0; draw(0); if(startNow) start();
+}
+function start(){ running=true; bStart.textContent='일시정지'; (ac||(ac=new (window.AudioContext||window.webkitAudioContext))).resume?.(); last=performance.now(); requestAnimationFrame(loop) }
+function stop(){ running=false; bStart.textContent='시작' }
+function copy(a){ return a.map(p=>({x:p.x,y:p.y})) }
+function spawn(){ while(1){ const p={x:rand(COL),y:rand(ROW)};
+  if(!snake?.some(s=>s.x==p.x&&s.y==p.y) && !foods.some(f=>f.x==p.x&&f.y==p.y)) return p; } }
+function loop(ts){ if(!running) return; const dt=(ts-last)/1000; last=ts; acc+=dt; tongue+=dt; const step=1/speed;
+  while(acc>=step){ prev=copy(snake); update(); acc-=step } draw(acc/step); requestAnimationFrame(loop) }
+function update(){
+  dir=pdir; const nx=snake[0].x+dir.x, ny=snake[0].y+dir.y;
+  if(nx<0||ny<0||nx>=COL||ny>=ROW) return gameOver();
+  const head={x:nx,y:ny}; if(snake.some((s,i)=>i&&s.x==nx&&s.y==ny)) return gameOver();
+  snake.unshift(head);
+  const k=foods.findIndex(f=>f.x==nx&&f.y==ny);
+  if(k>-1){ scoreEl.textContent=++score; sEat(); foods.splice(k,1); foods.push(spawn()); } else snake.pop();
+}
+function gameOver(){ stop(); best=Math.max(best,score); bestEl.textContent=best; localStorage.setItem('dog-snake-best',best); alert(`게임 오버! 점수: ${score}`) }
+// ===== drawing =====
+const V=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function board(){ const A=V('--tileA')||'#223049',B=V('--tileB')||'#1a2438';
+  for(let y=0;y<ROW;y++)for(let x=0;x<COL;x++){ g.fillStyle=((x+y)&1)?B:A; g.fillRect(x*CELL,y*CELL,CELL,CELL) } }
+const lerp=(a,b,t)=>a+(b-a)*t;
+function draw(t=0){
+  board(); foods.forEach(f=>meat(f.x,f.y));
+  for(let i=snake.length-1;i>=0;i--){
+    const c=snake[i], p=prev[i]||c, x=lerp(p.x,c.x,t)*CELL, y=lerp(p.y,c.y,t)*CELL;
+    i?body(x,y):head(x,y,dir)
   }
-  foodCountSel.value = "3"; // 기본값 3개
-
-  let settings = {
-    foodCount: 3,
-    difficulty: 'easy'
-  };
-  const baseSpeedByDiff = { easy: 6, medium: 9, hard: 13 }; // 스텝/초
-  const speedGain = 0.3; // 먹을 때 가속
-  const maxSpeed  = 18;
-
-  function openModal(){ modal.style.display='flex'; }
-  function closeModal(){ modal.style.display='none'; }
-
-  modalStart.addEventListener('click', ()=>{
-    settings.foodCount = Math.max(1, Math.min(10, Number(foodCountSel.value)||3));
-    const sel = diffWrap.querySelector('input[name="diff"]:checked');
-    settings.difficulty = sel ? sel.value : 'easy';
-    closeModal();
-    init(true); // 설정 반영 후 즉시 시작
-  });
-  modalCancel.addEventListener('click', ()=>{
-    // 취소해도 설정 팝업은 닫히고 정지 상태 유지
-    closeModal();
-  });
-
-  // ===== 사운드 =====
-  const AC = window.AudioContext || window.webkitAudioContext;
-  let actx = null; function audio(){ if(!actx) actx = new AC(); }
-  function beep({f=600,d=0.07,type='square',v=0.2}) {
-    audio(); const t=actx.currentTime, o=actx.createOscillator(), g=actx.createGain();
-    o.type=type; o.frequency.setValueAtTime(f,t);
-    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+d);
-    o.connect(g).connect(actx.destination); o.start(t); o.stop(t+d);
-  }
-  const sTurn = ()=>beep({f:520,d=0.05,type:'triangle',v:0.15});
-  const sEat  = ()=>{beep({f:420,d:0.07,type:'sine',v:0.24}); setTimeout(()=>beep({f:640,d:0.07,type:'sine',v:0.24}),60);};
-
-  // ===== 상태 =====
-  let snake, dir, pendingDir, foods, score, speed, running, lastTime, acc;
-  let tongueTimer = 0;
-  let prevSnake = null;
-
-  function init(startNow=false){
-    // 기본값(설정없을 때)도 안전하게
-    const diff = settings.difficulty || 'easy';
-    speed = baseSpeedByDiff[diff] ?? 8;
-
-    snake=[{x:10,y:10}];
-    dir={x:1,y:0}; pendingDir=dir;
-    score=0; running=false; lastTime=0; acc=0; tongueTimer=0;
-    foods=[]; spawnFoods(settings.foodCount || 1);
-    scoreEl.textContent=score;
-    prevSnake = cloneSnake(snake);
-    draw(0);
-
-    if(startNow){ start(); }
-  }
-  function start(){
-    running=true; toggleBtn.textContent='일시정지';
-    audio(); lastTime=performance.now(); requestAnimationFrame(loop);
-  }
-
-  function spawnFood(){
-    // 뱀 & 기존 먹이와 겹치지 않도록 스폰
-    while(true){
-      const p={x:Math.floor(Math.random()*cols), y:Math.floor(Math.random()*rows)};
-      if(snake.some(s=>s.x===p.x&&s.y===p.y)) {continue;}
-      if(foods.some(f=>f.x===p.x&&f.y===p.y)) {continue;}
-      return p;
-    }
-  }
-  function spawnFoods(n){
-    for(let i=0;i<n;i++){ foods.push(spawnFood()); }
-  }
-  function cloneSnake(arr){ return arr.map(p=>({x:p.x, y:p.y})); }
-
-  // ===== 입력 =====
-  const key2dir={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},
-                 w:{x:0,y:-1},s:{x:0,y:1},a:{x:-1,y:0},d:{x:1,y:0}};
-  addEventListener('keydown',e=>{
-    const k=e.key.toLowerCase();
-    if(k in key2dir){
-      const nd=key2dir[k];
-      if(snake.length>1 && (nd.x===-dir.x && nd.y===-dir.y)) return;
-      if(nd.x!==dir.x || nd.y!==dir.y) sTurn();
-      pendingDir=nd; e.preventDefault();
-    } else if(k===' '){ toggle(); e.preventDefault(); }
-      else if(k==='r'){ init(true); e.preventDefault(); }
-  });
-
-  document.querySelectorAll('.pad [data-d]').forEach(b=>{
-    b.addEventListener('click',()=>{
-      const map={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};
-      const nd=map[b.dataset.d];
-      if(snake.length>1 && (nd.x===-dir.x && nd.y===-dir.y)) return;
-      if(nd.x!==dir.x || nd.y!==dir.y) sTurn();
-      pendingDir=nd;
-    });
-  });
-
-  // ===== 루프 =====
-  function loop(ts){
-    if(!running) return;
-    const dt=(ts-lastTime)/1000; lastTime=ts; acc+=dt; tongueTimer+=dt;
-    const step=1/speed;
-
-    while(acc>=step){
-      prevSnake = cloneSnake(snake);
-      update();
-      acc -= step;
-    }
-    const t = (acc < step) ? (acc/step) : 0;
-    draw(t);
-    requestAnimationFrame(loop);
-  }
-
-  function update(){
-    dir=pendingDir;
-    // 벽 충돌
-    const nx = snake[0].x + dir.x;
-    const ny = snake[0].y + dir.y;
-    if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) return gameOver();
-    const head={x:nx, y:ny};
-    // 몸 충돌
-    if(snake.some((s,i)=>i>0 && s.x===head.x&&s.y===head.y)) return gameOver();
-
-    snake.unshift(head);
-
-    // 먹이 먹기: 배열에서 찾기
-    const eatenIdx = foods.findIndex(f=>f.x===head.x && f.y===head.y);
-    if(eatenIdx>=0){
-      score++; scoreEl.textContent=score;
-      speed = Math.min(maxSpeed, speed + speedGain);
-      sEat();
-      // 해당 먹이 제거 후 보충 스폰
-      foods.splice(eatenIdx,1);
-      foods.push(spawnFood());
-    } else {
-      snake.pop();
-    }
-  }
-
-  // ===== 그리기 =====
-  function draw(t=0){
-    drawBoard();
-    foods.forEach(f=>drawMeat(f.x, f.y));
-
-    // 스네이크 보간 렌더
-    for(let i=snake.length-1;i>=0;i--){
-      const cur = snake[i];
-      const prv = (prevSnake && prevSnake[i]) ? prevSnake[i] : cur;
-      const ix = (prv.x + (cur.x - prv.x)*t) * cell;
-      const iy = (prv.y + (cur.y - prv.y)*t) * cell;
-      if(i===0) drawDogHeadAt(ix, iy, dir);
-      else      drawDogBodyAt(ix, iy);
-    }
-  }
-
-  // 체스판
-  function drawBoard(){
-    const A = getVar('--tileA') || '#223049';
-    const B = getVar('--tileB') || '#1a2438';
-    for(let y=0;y<rows;y++){
-      for(let x=0;x<cols;x++){
-        ctx.fillStyle = ((x+y)%2===0) ? A : B;
-        ctx.fillRect(x*cell, y*cell, cell, cell);
-      }
-    }
-  }
-
-  // 먹이
-  function drawMeat(cx, cy){
-    const px=cx*cell, py=cy*cell, s=cell;
-    const cX=px+s/2, cY=py+s/2;
-
-    ctx.fillStyle = getVar('--meat');
-    ctx.beginPath(); ctx.ellipse(cX-s*0.1, cY, s*0.3, s*0.22, 0, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth=2; ctx.stroke();
-
-    ctx.strokeStyle = getVar('--meat-fat'); ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(cX+s*0.05, cY); ctx.lineTo(cX+s*0.3, cY); ctx.stroke();
-
-    ctx.fillStyle = getVar('--meat-fat');
-    ctx.beginPath(); ctx.arc(cX+s*0.28, cY, s*0.14, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cX+s*0.38, cY, s*0.10, 0, Math.PI*2); ctx.fill();
-
-    ctx.fillStyle = 'rgba(255,255,255,0.18)';
-    ctx.beginPath(); ctx.ellipse(cX-s*0.18, cY-3, s*0.10, s*0.07, -0.3, 0, Math.PI*2); ctx.fill();
-  }
-
-  // 몸통
-  function drawDogBodyAt(ix, iy){
-    const r=cell*0.42, cx=ix+cell/2, cy=iy+cell/2;
-    const g=ctx.createRadialGradient(cx, cy, r*0.35, cx, cy, r);
-    g.addColorStop(0, getVar('--dog-head')); g.addColorStop(1, getVar('--dog-body'));
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
-
-    ctx.strokeStyle=getVar('--dog-outline'); ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
-
-    ctx.fillStyle='rgba(255,255,255,0.08)';
-    ctx.beginPath(); ctx.arc(cx+2, cy-2, 2, 0, Math.PI*2); ctx.fill();
-  }
-
-  // 머리
-  function drawDogHeadAt(ix, iy, dirNow){
-    const r=cell*0.46;
-    const cx=ix+cell/2, cy=iy+cell/2;
-
-    const g=ctx.createRadialGradient(cx-2*dirNow.x, cy-2*dirNow.y, r*0.35, cx, cy, r);
-    g.addColorStop(0, getVar('--dog-head')); g.addColorStop(1, getVar('--dog-body'));
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
-
-    ctx.strokeStyle=getVar('--dog-outline'); ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
-
-    const earOffset = 6, earBack = 6;
-    drawEar(cx - dirNow.x*earBack + (-dirNow.y)*earOffset,
-            cy - dirNow.y*earBack + ( dirNow.x)*earOffset, dirNow, true);
-    drawEar(cx - dirNow.x*earBack + ( dirNow.y)*earOffset,
-            cy - dirNow.y*earBack + (-dirNow.x)*earOffset, dirNow, false);
-
-    const eyeOffset = 6, eyeSide = 7;
-    const ex1 = cx + (-dirNow.y)*eyeSide + dirNow.x*eyeOffset;
-    const ey1 = cy + ( dirNow.x)*eyeSide + dirNow.y*eyeOffset;
-    const ex2 = cx + ( dirNow.y)*eyeSide + dirNow.x*eyeOffset;
-    const ey2 = cy + (-dirNow.x)*eyeSide + dirNow.y*eyeOffset;
-    ctx.fillStyle='white';
-    ctx.beginPath(); ctx.arc(ex1,ey1,4,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(ex2,ey2,4,0,Math.PI*2); ctx.fill();
-
-    const pupilShift = 1.8;
-    ctx.fillStyle='#0b1220';
-    ctx.beginPath(); ctx.arc(ex1+dirNow.x*pupilShift, ey1+dirNow.y*pupilShift, 2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(ex2+dirNow.x*pupilShift, ey2+dirNow.y*pupilShift, 2, 0, Math.PI*2); ctx.fill();
-
-    const nx = cx + dirNow.x*(r*0.55), ny = cy + dirNow.y*(r*0.55);
-    ctx.fillStyle='#111827';
-    ctx.beginPath(); ctx.arc(nx, ny, 3, 0, Math.PI*2); ctx.fill();
-
-    const showTongue = (Math.floor(tongueTimer*5)%5===0);
-    if(showTongue){
-      const tx = cx + dirNow.x*(r+2), ty = cy + dirNow.y*(r+2);
-      ctx.strokeStyle=getVar('--tongue'); ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx+dirNow.x*7, ty+dirNow.y*7); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(tx+dirNow.x*7, ty+dirNow.y*7);
-      ctx.lineTo(tx+dirNow.x*9 + (dirNow.y*2), ty+dirNow.y*9 + (-dirNow.x*2));
-      ctx.moveTo(tx+dirNow.x*7, ty+dirNow.y*7);
-      ctx.lineTo(tx+dirNow.x*9 + (-dirNow.y*2), ty+dirNow.y*9 + ( dirNow.x*2));
-      ctx.stroke();
-    }
-  }
-  function drawEar(x, y, dirNow, left){
-    ctx.fillStyle=getVar('--dog-body');
-    ctx.strokeStyle=getVar('--dog-outline');
-    ctx.lineWidth=2;
-    ctx.beginPath();
-    const s=6;
-    ctx.moveTo(x, y);
-    ctx.lineTo(x - dirNow.x*2 + ( left? -dirNow.y : dirNow.y)*s, y - dirNow.y*2 + ( left?  dirNow.x : -dirNow.x)*s);
-    ctx.lineTo(x - dirNow.x*2 + ( left?  dirNow.y : -dirNow.y)*s, y - dirNow.y*2 + ( left? -dirNow.x :  dirNow.x)*s);
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-  }
-  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
-  // ===== 컨트롤 =====
-  function toggle(){
-    if(!running){ start(); }
-    else{ running=false; toggleBtn.textContent='시작'; }
-  }
-  function gameOver(){
-    running=false; toggleBtn.textContent='시작';
-    best=Math.max(best,score); localStorage.setItem(bestKey,best); bestEl.textContent=best;
-    alert(`게임 오버! 점수: ${score}`);
-  }
-  toggleBtn.addEventListener('click',toggle);
-  restartBtn.addEventListener('click',()=>init(true));
-
-  // 초기: 설정 모달 보여주기 (확정 전까지는 시작 버튼 눌러도 시작 안 함)
-  openModal();
+}
+function grad(cx,cy,r,dx,dy){ const q=g.createRadialGradient(cx-2*dx,cy-2*dy,r*.35,cx,cy,r);
+  q.addColorStop(0,V('--dog1')); q.addColorStop(1,V('--dog2')); return q }
+function circle(cx,cy,r,fill,strokeW=0,stroke='#000'){ if(fill){g.fillStyle=fill; g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.fill()}
+  if(strokeW){g.strokeStyle=stroke; g.lineWidth=strokeW; g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.stroke()} }
+function head(x,y,d){ const r=CELL*.46,cx=x+CELL/2,cy=y+CELL/2,ox=V('--dogo');
+  circle(cx,cy,r,grad(cx,cy,r,d.x,d.y),2,ox);
+  const eo=6,es=7,ex1=cx+(-d.y)*es+d.x*eo,ey1=cy+( d.x)*es+d.y*eo,ex2=cx+( d.y)*es+d.x*eo,ey2=cy+(-d.x)*es+d.y*eo;
+  circle(ex1,ey1,4,'#fff'); circle(ex2,ey2,4,'#fff'); circle(ex1+d.x*1.8,ey1+d.y*1.8,2,'#0b1220'); circle(ex2+d.x*1.8,ey2+d.y*1.8,2,'#0b1220');
+  circle(cx+d.x*(r*.55),cy+d.y*(r*.55),3,'#111827');
+  ear(cx - d.x*6 + (-d.y)*6, cy - d.y*6 + ( d.x)*6, d,true);
+  ear(cx - d.x*6 + ( d.y)*6, cy - d.y*6 + (-d.x)*6, d,false);
+  if((Math.floor(tongue*5)%5)==0){ g.strokeStyle=V('--tongue'); g.lineWidth=2;
+    const tx=cx+d.x*(r+2),ty=cy+d.y*(r+2); g.beginPath(); g.moveTo(tx,ty); g.lineTo(tx+d.x*7,ty+d.y*7); g.stroke();
+    g.beginPath(); g.moveTo(tx+d.x*7,ty+d.y*7); g.lineTo(tx+d.x*9 + d.y*2,ty+d.y*9 - d.x*2); g.moveTo(tx+d.x*7,ty+d.y*7);
+    g.lineTo(tx+d.x*9 - d.y*2,ty+d.y*9 + d.x*2); g.stroke() }
+}
+function ear(x,y,d,left){ g.fillStyle=V('--dog2'); g.strokeStyle=V('--dogo'); g.lineWidth=2; const s=6;
+  g.beginPath(); g.moveTo(x,y);
+  g.lineTo(x - d.x*2 + ( left? -d.y : d.y)*s, y - d.y*2 + ( left?  d.x : -d.x)*s);
+  g.lineTo(x - d.x*2 + ( left?  d.y : -d.y)*s, y - d.y*2 + ( left? -d.x :  d.x)*s);
+  g.closePath(); g.fill(); g.stroke() }
+function body(x,y){ const r=CELL*.42,cx=x+CELL/2,cy=y+CELL/2; circle(cx,cy,r,grad(cx,cy,r,0,0),2,V('--dogo'));
+  circle(cx+2,cy-2,2,'rgba(255,255,255,.08)') }
+function meat(cx,cy){ const x=cx*CELL,y=cy*CELL,s=CELL,cx2=x+s/2,cy2=y+s/2;
+  g.fillStyle=V('--meat'); g.beginPath(); g.ellipse(cx2-s*.1,cy2,s*.3,s*.22,0,0,Math.PI*2); g.fill();
+  g.strokeStyle='rgba(0,0,0,.45)'; g.lineWidth=2; g.stroke();
+  g.strokeStyle=V('--bone'); g.lineWidth=5; g.beginPath(); g.moveTo(cx2+s*.05,cy2); g.lineTo(cx2+s*.3,cy2); g.stroke();
+  g.fillStyle=V('--bone'); g.beginPath(); g.arc(cx2+s*.28,cy2,s*.14,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(cx2+s*.38,cy2,s*.10,0,Math.PI*2); g.fill();
+  g.fillStyle='rgba(255,255,255,.18)'; g.beginPath(); g.ellipse(cx2-s*.18,cy2-3,s*.10,s*.07,-.3,0,Math.PI*2); g.fill()
+}
+// ===== input =====
+const keyDir={arrowup:{x:0,y:-1},w:{x:0,y:-1},arrowdown:{x:0,y:1},s:{x:0,y:1},arrowleft:{x:-1,y:0},a:{x:-1,y:0},arrowright:{x:1,y:0},d:{x:1,y:0}};
+document.onkeydown=e=>{
+  const k=e.key.toLowerCase();
+  if(keyDir[k]){ const nd=keyDir[k]; if(snake?.length>1 && nd.x==-dir.x && nd.y==-dir.y) return;
+    if(nd.x!=dir.x||nd.y!=dir.y) sTurn(); pdir=nd; e.preventDefault(); return }
+  if(k===' '){ if(isM()) mStart.click(); else (running?stop():start()); e.preventDefault(); return }
+  if(k==='r'){ init(true); e.preventDefault() }
+};
+document.querySelectorAll('.pad [data-d]').forEach(b=>b.onclick=()=>{const m={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}},nd=m[b.dataset.d];
+  if(snake.length>1 && nd.x==-dir.x && nd.y==-dir.y) return; if(nd.x!=dir.x||nd.y!=dir.y) sTurn(); pdir=nd });
+// ===== buttons & modal =====
+bStart.onclick=()=>{ if(isM()) return; running?stop():start() };
+bRestart.onclick=()=>init(true);
+mCancel.onclick=()=>closeM();
+mStart.onclick=()=>{ closeM(); init(true) };
+// ===== boot =====
+openM(); // 모달부터
+// 왼쪽 캔버스 첫 그리기(정지화면)
+snake=[{x:10,y:10}]; prev=copy(snake); dir=pdir={x:1,y:0}; foods=[]; draw(0);
 })();
 </script>
 </body>
