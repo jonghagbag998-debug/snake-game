@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>강아지 스네이크 (벽 충돌 + 9색 커스텀)</title>
+<title>강아지 스네이크 (부드러운 이동 + 키힌트)</title>
 <style>
   :root{
     --bg:#0b1220;
@@ -28,10 +28,12 @@
   #stage-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:14px;}
   h1{margin:0 0 .5rem; font-size:1.1rem; font-weight:700; opacity:.9}
   canvas{background:black; border:2px solid #334155; border-radius:12px; image-rendering:pixelated}
-  .hud{display:flex; gap:1rem; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:.6rem}
-  .btn{background:#334155; color:white; border:none; border-radius:10px; padding:.55rem 1rem; cursor:pointer; font-weight:700}
+  .hud{display:flex; gap:1.2rem; align-items:flex-start; justify-content:center; flex-wrap:wrap; margin-top:.6rem}
+  .btnwrap{display:flex; flex-direction:column; align-items:center; gap:.25rem}
+  .btn{background:#334155; color:white; border:none; border-radius:10px; padding:.55rem 1rem; cursor:pointer; font-weight:700; min-width:96px; text-align:center}
   .btn:active{transform:translateY(1px)}
-  .muted{opacity:.75; font-size:.92rem}
+  .hint{font-size:.8rem; opacity:.75}
+  .muted{opacity:.75; font-size:.92rem; align-self:center}
   .pad{display:grid; grid-template-columns:repeat(3,56px); grid-template-rows:repeat(3,56px); gap:.4rem; margin:.4rem 0 0}
   .pad button{background:#1f2937; border:2px solid #334155; color:#cbd5e1; font-size:1rem; border-radius:10px}
   @media(min-width:720px){ .pad{display:none} }
@@ -45,7 +47,7 @@
   .panel-group h3{margin:0 0 .5rem; font-size:.98rem}
   .row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:.4rem 0}
   .row label{font-size:.92rem; opacity:.9}
-  select{width:130px; padding:.4rem .5rem; background:#111a2d; border:1px solid #233; color:#e5e7eb; border-radius:8px}
+  select{width:160px; padding:.4rem .5rem; background:#111a2d; border:1px solid #233; color:#e5e7eb; border-radius:8px}
   .tip{font-size:.88rem; opacity:.75; line-height:1.4}
 </style>
 </head>
@@ -57,8 +59,17 @@
     <div class="hud">
       <div>점수: <strong id="score">0</strong></div>
       <div>최고: <strong id="best">0</strong></div>
-      <button class="btn" id="toggle">시작</button>
-      <button class="btn" id="restart">다시하기</button>
+
+      <div class="btnwrap">
+        <button class="btn" id="toggle">시작</button>
+        <div class="hint">(Space)</div>
+      </div>
+
+      <div class="btnwrap">
+        <button class="btn" id="restart">다시하기</button>
+        <div class="hint">(R)</div>
+      </div>
+
       <span class="muted">방향키 / WASD</span>
     </div>
 
@@ -88,17 +99,17 @@
     </div>
     <div class="panel-group">
       <h3>도움말</h3>
-      <p class="tip">스페이스로 시작/일시정지. 벽에 부딪히면 바로 게임오버. 최고 점수는 브라우저에 저장돼요.</p>
+      <p class="tip">스페이스로 시작/일시정지, R키로 다시하기. 벽에 부딪히면 게임오버. 최고 점수는 브라우저에 저장돼요.</p>
     </div>
   </aside>
 
 <script>
 (() => {
-  // ===== 기본 보드 설정 =====
+  // ===== 기본 보드/렌더 설정 =====
   const cell = 20, cols = 20, rows = 20;
   const w = cols * cell, h = rows * cell;
   const cvs = document.getElementById('game');
-  const ctx = cvs.getContext('2d', { alpha:false }); // 배경 덮어쓰기 확실
+  const ctx = cvs.getContext('2d', { alpha:false });
   cvs.width = w; cvs.height = h;
 
   // HUD
@@ -128,11 +139,17 @@
   let snake, dir, pendingDir, food, score, speed, running, lastTime, acc;
   let tongueTimer = 0;
 
+  // 보간용 스냅샷(이전 스텝 상태)
+  let prevSnake = null;
+  let prevDir = {x:1,y:0};
+
   function init(){
     snake=[{x:10,y:10}];
-    dir={x:1,y:0}; pendingDir=dir;
+    dir={x:1,y:0}; pendingDir=dir; prevDir=dir;
     score=0; speed=8; running=false; lastTime=0; acc=0; tongueTimer=0;
-    food=spawnFood(); scoreEl.textContent=score; draw();
+    food=spawnFood(); scoreEl.textContent=score;
+    prevSnake = cloneSnake(snake);
+    draw(0); // 초기 화면
   }
   function spawnFood(){
     while(true){
@@ -140,17 +157,20 @@
       if(!snake.some(s=>s.x===p.x&&s.y===p.y)) return p;
     }
   }
+  function cloneSnake(arr){ return arr.map(p=>({x:p.x, y:p.y})); }
 
   // ===== 입력 =====
   const key2dir={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},
                  w:{x:0,y:-1},s:{x:0,y:1},a:{x:-1,y:0},d:{x:1,y:0}};
   addEventListener('keydown',e=>{
-    const k=e.key; if(k in key2dir){
+    const k=e.key.toLowerCase();
+    if(k in key2dir){
       const nd=key2dir[k];
       if(snake.length>1 && (nd.x===-dir.x && nd.y===-dir.y)) return;
       if(nd.x!==dir.x || nd.y!==dir.y) sTurn();
       pendingDir=nd; e.preventDefault();
-    } else if(k===' '){ toggle(); }
+    } else if(k===' '){ toggle(); e.preventDefault(); }
+      else if(k==='r'){ restartBtn.click(); e.preventDefault(); }
   });
   document.querySelectorAll('.pad [data-d]').forEach(b=>{
     b.addEventListener('click',()=>{
@@ -167,38 +187,61 @@
     if(!running) return;
     const dt=(ts-lastTime)/1000; lastTime=ts; acc+=dt; tongueTimer+=dt;
     const step=1/speed;
-    while(acc>=step){ update(); acc-=step; }
-    draw(); requestAnimationFrame(loop);
+
+    // 1) 필요한 만큼 스텝 업데이트 (벽/몸 충돌, 먹이 판정은 격자 단위)
+    while(acc>=step){
+      prevSnake = cloneSnake(snake);
+      prevDir = {x:dir.x, y:dir.y};
+      update();               // 한 스텝 진행
+      acc -= step;
+    }
+
+    // 2) 보간 비율 t = 지난 스텝 이후 경과시간 / 스텝시간 (0~1)
+    const t = (acc < step) ? (acc/step) : 0;
+    draw(t);
+
+    requestAnimationFrame(loop);
   }
 
   function update(){
     dir=pendingDir;
-    // 벽 충돌 모드: 화면 밖으로 나가면 즉시 게임오버
+    // 벽 충돌 모드
     const nx = snake[0].x + dir.x;
     const ny = snake[0].y + dir.y;
-    if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) {
-      return gameOver();
-    }
+    if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) return gameOver();
     const head={x:nx, y:ny};
-    if(snake.some((s,i)=>i>0 && s.x===head.x&&s.y===head.y)){ return gameOver(); }
+
+    if(snake.some((s,i)=>i>0 && s.x===head.x&&s.y===head.y)) return gameOver();
+
     snake.unshift(head);
     if(head.x===food.x && head.y===food.y){
       score++; scoreEl.textContent=score; speed=Math.min(16,speed+0.3); sEat(); food=spawnFood();
     } else snake.pop();
   }
 
-  // ===== 그리기 =====
-  function draw(){
+  // ===== 그리기 (보간 렌더) =====
+  function draw(t=0){
     drawBoard();            // 체크무늬
     drawMeat(food.x, food.y);
 
-    // 강아지(머리 + 몸통)
-    for(let i=snake.length-1;i>=0;i--){
-      const p=snake[i];
-      if(i===0) drawDogHead(p, dir);
-      else      drawDogBody(p);
+    // 보간된 위치 계산: prevSnake -> snake 사이를 t만큼
+    const segCount = snake.length;
+    for(let i=segCount-1;i>=0;i--){
+      const cur = snake[i];
+      const prv = (prevSnake && prevSnake[i]) ? prevSnake[i] : cur;
+      const ix = lerp(prv.x, cur.x, t) * cell;
+      const iy = lerp(prv.y, cur.y, t) * cell;
+
+      if(i===0){
+        // 머리는 진행 방향을 현재 dir 기준으로, 위치는 보간값
+        drawDogHeadAt(ix, iy, dir);
+      }else{
+        drawDogBodyAt(ix, iy);
+      }
     }
   }
+
+  function lerp(a,b,t){ return a + (b-a)*t; }
 
   // 체스판(체크무늬) 타일 그리기
   function drawBoard(){
@@ -212,7 +255,7 @@
     }
   }
 
-  // 먹이: 드럼스틱 고기 (외곽선 추가로 시인성 강화)
+  // 먹이: 드럼스틱 고기
   function drawMeat(cx, cy){
     const px=cx*cell, py=cy*cell, s=cell;
     const cX=px+s/2, cY=py+s/2;
@@ -236,9 +279,9 @@
     ctx.beginPath(); ctx.ellipse(cX-s*0.18, cY-3, s*0.10, s*0.07, -0.3, 0, Math.PI*2); ctx.fill();
   }
 
-  // 강아지 몸통
-  function drawDogBody(p){
-    const x=p.x*cell, y=p.y*cell, r=cell*0.42, cx=x+cell/2, cy=y+cell/2;
+  // 강아지 몸통(보간 좌표 버전)
+  function drawDogBodyAt(ix, iy){
+    const r=cell*0.42, cx=ix+cell/2, cy=iy+cell/2;
     const g=ctx.createRadialGradient(cx, cy, r*0.35, cx, cy, r);
     g.addColorStop(0, getVar('--dog-head')); g.addColorStop(1, getVar('--dog-body'));
     ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
@@ -251,13 +294,13 @@
     ctx.beginPath(); ctx.arc(cx+2, cy-2, 2, 0, Math.PI*2); ctx.fill();
   }
 
-  // 강아지 머리
-  function drawDogHead(p, dir){
-    const x=p.x*cell, y=p.y*cell, r=cell*0.46;
-    const cx=x+cell/2, cy=y+cell/2;
+  // 강아지 머리(보간 좌표 버전)
+  function drawDogHeadAt(ix, iy, dirNow){
+    const r=cell*0.46;
+    const cx=ix+cell/2, cy=iy+cell/2;
 
     // 머리
-    const g=ctx.createRadialGradient(cx-2*dir.x, cy-2*dir.y, r*0.35, cx, cy, r);
+    const g=ctx.createRadialGradient(cx-2*dirNow.x, cy-2*dirNow.y, r*0.35, cx, cy, r);
     g.addColorStop(0, getVar('--dog-head')); g.addColorStop(1, getVar('--dog-body'));
     ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
 
@@ -266,55 +309,55 @@
 
     // 귀
     const earOffset = 6, earBack = 6;
-    drawEar(cx - dir.x*earBack + (-dir.y)*earOffset,
-            cy - dir.y*earBack + ( dir.x)*earOffset, dir, true);
-    drawEar(cx - dir.x*earBack + ( dir.y)*earOffset,
-            cy - dir.y*earBack + (-dir.x)*earOffset, dir, false);
+    drawEar(cx - dirNow.x*earBack + (-dirNow.y)*earOffset,
+            cy - dirNow.y*earBack + ( dirNow.x)*earOffset, dirNow, true);
+    drawEar(cx - dirNow.x*earBack + ( dirNow.y)*earOffset,
+            cy - dirNow.y*earBack + (-dirNow.x)*earOffset, dirNow, false);
 
     // 눈
     const eyeOffset = 6, eyeSide = 7;
-    const ex1 = cx + (-dir.y)*eyeSide + dir.x*eyeOffset;
-    const ey1 = cy + ( dir.x)*eyeSide + dir.y*eyeOffset;
-    const ex2 = cx + ( dir.y)*eyeSide + dir.x*eyeOffset;
-    const ey2 = cy + (-dir.x)*eyeSide + dir.y*eyeOffset;
+    const ex1 = cx + (-dirNow.y)*eyeSide + dirNow.x*eyeOffset;
+    const ey1 = cy + ( dirNow.x)*eyeSide + dirNow.y*eyeOffset;
+    const ex2 = cx + ( dirNow.y)*eyeSide + dirNow.x*eyeOffset;
+    const ey2 = cy + (-dirNow.x)*eyeSide + dirNow.y*eyeOffset;
     ctx.fillStyle='white';
     ctx.beginPath(); ctx.arc(ex1,ey1,4,0,Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(ex2,ey2,4,0,Math.PI*2); ctx.fill();
     // 동공
     const pupilShift = 1.8;
     ctx.fillStyle='#0b1220';
-    ctx.beginPath(); ctx.arc(ex1+dir.x*pupilShift, ey1+dir.y*pupilShift, 2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(ex2+dir.x*pupilShift, ey2+dir.y*pupilShift, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(ex1+dirNow.x*pupilShift, ey1+dirNow.y*pupilShift, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(ex2+dirNow.x*pupilShift, ey2+dirNow.y*pupilShift, 2, 0, Math.PI*2); ctx.fill();
 
     // 코
-    const nx = cx + dir.x*(r*0.55), ny = cy + dir.y*(r*0.55);
+    const nx = cx + dirNow.x*(r*0.55), ny = cy + dirNow.y*(r*0.55);
     ctx.fillStyle='#111827';
     ctx.beginPath(); ctx.arc(nx, ny, 3, 0, Math.PI*2); ctx.fill();
 
     // 혀 (간헐적)
     const showTongue = (Math.floor(tongueTimer*5)%5===0);
     if(showTongue){
-      const tx = cx + dir.x*(r+2), ty = cy + dir.y*(r+2);
+      const tx = cx + dirNow.x*(r+2), ty = cy + dirNow.y*(r+2);
       ctx.strokeStyle=getVar('--tongue'); ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx+dir.x*7, ty+dir.y*7); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx+dirNow.x*7, ty+dirNow.y*7); ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(tx+dir.x*7, ty+dir.y*7);
-      ctx.lineTo(tx+dir.x*9 + (dir.y*2), ty+dir.y*9 + (-dir.x*2));
-      ctx.moveTo(tx+dir.x*7, ty+dir.y*7);
-      ctx.lineTo(tx+dir.x*9 + (-dir.y*2), ty+dir.y*9 + ( dir.x*2));
+      ctx.moveTo(tx+dirNow.x*7, ty+dirNow.y*7);
+      ctx.lineTo(tx+dirNow.x*9 + (dirNow.y*2), ty+dirNow.y*9 + (-dirNow.x*2));
+      ctx.moveTo(tx+dirNow.x*7, ty+dirNow.y*7);
+      ctx.lineTo(tx+dirNow.x*9 + (-dirNow.y*2), ty+dirNow.y*9 + ( dirNow.x*2));
       ctx.stroke();
     }
   }
 
-  function drawEar(x, y, dir, left){
+  function drawEar(x, y, dirNow, left){
     ctx.fillStyle=getVar('--dog-body');
     ctx.strokeStyle=getVar('--dog-outline');
     ctx.lineWidth=2;
     ctx.beginPath();
     const s=6;
     ctx.moveTo(x, y);
-    ctx.lineTo(x - dir.x*2 + ( left? -dir.y : dir.y)*s, y - dir.y*2 + ( left?  dir.x : -dir.x)*s);
-    ctx.lineTo(x - dir.x*2 + ( left?  dir.y : -dir.y)*s, y - dir.y*2 + ( left? -dir.x :  dir.x)*s);
+    ctx.lineTo(x - dirNow.x*2 + ( left? -dirNow.y : dirNow.y)*s, y - dirNow.y*2 + ( left?  dirNow.x : -dirNow.x)*s);
+    ctx.lineTo(x - dirNow.x*2 + ( left?  dirNow.y : -dirNow.y)*s, y - dirNow.y*2 + ( left? -dirNow.x :  dirNow.x)*s);
     ctx.closePath(); ctx.fill(); ctx.stroke();
   }
 
@@ -330,6 +373,10 @@
   }
   toggleBtn.addEventListener('click',toggle);
   restartBtn.addEventListener('click',()=>init());
+
+  // 키보드 R로 다시하기
+  // (keydown에서 r 처리 → restartBtn.click())
+
   init();
 
   // ===== 9색 팔레트 셀렉터 =====
@@ -341,8 +388,8 @@
     {name:'노', hex:'#ffff00'},
     {name:'초', hex:'#00ff00'},
     {name:'파', hex:'#0000ff'},
-    {name:'남', hex:'#000080'}, // 네이비/인디고 느낌
-    {name:'보', hex:'#800080'}  // 퍼플
+    {name:'남', hex:'#000080'},
+    {name:'보', hex:'#800080'}
   ];
   const selA = document.getElementById('selA');
   const selB = document.getElementById('selB');
@@ -367,25 +414,24 @@
     const b=Number(m[3]).toString(16).padStart(2,'0');
     return `#${r}${g}${b}`;
   }
-
   // 초기 옵션 구성
   fillSelect(selA, currentHex('--tileA', '#223049'));
   fillSelect(selB, currentHex('--tileB', '#1a2438'));
 
   selA.addEventListener('change', e=>{
     document.documentElement.style.setProperty('--tileA', e.target.value);
-    draw();
+    draw(0);
   });
   selB.addEventListener('change', e=>{
     document.documentElement.style.setProperty('--tileB', e.target.value);
-    draw();
+    draw(0);
   });
   resetBtn.addEventListener('click', ()=>{
     document.documentElement.style.setProperty('--tileA', '#223049');
     document.documentElement.style.setProperty('--tileB', '#1a2438');
     fillSelect(selA, '#223049');
     fillSelect(selB, '#1a2438');
-    draw();
+    draw(0);
   });
 })();
 </script>
