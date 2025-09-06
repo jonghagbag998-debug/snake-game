@@ -3,34 +3,57 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>스네이크 (캐릭터 버전)</title>
+<title>강아지 스네이크</title>
 <style>
   :root{
-    --bg:#0f172a;--grid:#1f2937;
-    --snake:#22c55e;--head:#16a34a; --outline:#064e3b;
-    --food:#ef4444; --food-leaf:#22c55e; --ui:#e5e7eb;
+    --bg:#0b1220;
+    --tileA:#223049;      /* 체스판 색 A (사용자 변경용) */
+    --tileB:#1a2438;      /* 체스판 색 B (사용자 변경용) */
+    --dog-body:#7dd3fc;   /* 몸통 기본 */
+    --dog-head:#38bdf8;   /* 머리 하이라이트 */
+    --dog-outline:#0e7490;
+    --tongue:#ef4444;
+    --meat:#d97706;       /* 고기 */
+    --meat-fat:#fff7ed;   /* 지방/뼈 */
+    --ui:#e5e7eb;
+    --panel:#0f172a;
   }
   *{box-sizing:border-box}
   body{
-    margin:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    background:var(--bg);color:var(--ui);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    margin:0; min-height:100vh; background:var(--bg);
+    color:var(--ui); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    display:grid; gap:0;
+    grid-template-columns: 1fr min(320px, 35vw);
   }
-  h1{margin:0 0 .5rem;font-size:1.25rem;font-weight:700}
-  #wrap{display:flex;flex-direction:column;align-items:center;gap:.75rem}
-  canvas{background:var(--grid);border:2px solid #334155;border-radius:12px;image-rendering:pixelated}
-  .hud{display:flex;gap:1rem;align-items:center;justify-content:center;flex-wrap:wrap}
-  .btn{background:#334155;color:white;border:none;border-radius:10px;padding:.6rem 1rem;cursor:pointer;font-weight:700}
+  #stage-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:14px;}
+  h1{margin:0 0 .5rem; font-size:1.1rem; font-weight:700; opacity:.9}
+  canvas{background:black; border:2px solid #334155; border-radius:12px; image-rendering:pixelated}
+  .hud{display:flex; gap:1rem; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:.6rem}
+  .btn{background:#334155; color:white; border:none; border-radius:10px; padding:.55rem 1rem; cursor:pointer; font-weight:700}
   .btn:active{transform:translateY(1px)}
-  .pad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:.4rem;margin-top:.2rem}
-  .pad button{background:#1f2937;border:2px solid #334155;color:#cbd5e1;font-size:1rem;border-radius:10px}
-  .muted{opacity:.7}
-  @media (min-width:640px){ .pad{display:none} }
+  .muted{opacity:.75; font-size:.92rem}
+  .pad{display:grid; grid-template-columns:repeat(3,56px); grid-template-rows:repeat(3,56px); gap:.4rem; margin:.4rem 0 0}
+  .pad button{background:#1f2937; border:2px solid #334155; color:#cbd5e1; font-size:1rem; border-radius:10px}
+  @media(min-width:720px){ .pad{display:none} }
+
+  /* 사이드 패널 */
+  aside{
+    background:var(--panel); border-left:1px solid #223; padding:16px 14px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .panel-group{background:#0b1324; border:1px solid #213; border-radius:10px; padding:12px}
+  .panel-group h3{margin:0 0 .5rem; font-size:.98rem}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:.4rem 0}
+  .row label{font-size:.92rem; opacity:.9}
+  input[type="color"]{width:48px; height:32px; border:none; background:none; padding:0}
+  .tip{font-size:.88rem; opacity:.75; line-height:1.4}
 </style>
 </head>
 <body>
-  <div id="wrap">
-    <h1>스네이크 🐍</h1>
+  <div id="stage-wrap">
+    <h1>강아지 스네이크 🐶🍖</h1>
     <canvas id="game" width="420" height="420" aria-label="게임 캔버스"></canvas>
+
     <div class="hud">
       <div>점수: <strong id="score">0</strong></div>
       <div>최고: <strong id="best">0</strong></div>
@@ -38,6 +61,8 @@
       <button class="btn" id="restart">다시하기</button>
       <span class="muted">방향키 / WASD</span>
     </div>
+
+    <!-- 모바일 방향패드 -->
     <div class="pad" aria-hidden="true">
       <span></span><button data-d="up">▲</button><span></span>
       <button data-d="left">◀</button><span></span><button data-d="right">▶</button>
@@ -45,21 +70,44 @@
     </div>
   </div>
 
+  <aside>
+    <div class="panel-group">
+      <h3>체스판 색상 커스텀</h3>
+      <div class="row">
+        <label for="colorA">타일 A</label>
+        <input type="color" id="colorA" value="#223049" />
+      </div>
+      <div class="row">
+        <label for="colorB">타일 B</label>
+        <input type="color" id="colorB" value="#1a2438" />
+      </div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn" id="resetColors">초기화</button>
+      </div>
+      <p class="tip">두 색의 밝기 차이를 크게 주면 가시성이 좋아요. 너무 비슷하면 체스판 구분이 잘 안 보일 수 있어요.</p>
+    </div>
+    <div class="panel-group">
+      <h3>도움말</h3>
+      <p class="tip">스페이스로 시작/일시정지. 고기를 먹으면 속도가 조금 올라가요. 최고 점수는 브라우저에 저장돼요.</p>
+    </div>
+  </aside>
+
 <script>
 (() => {
-  // ===== 기본 세팅 =====
+  // ===== 기본 보드 설정 =====
   const cell = 20, cols = 20, rows = 20;
-  const w = cols*cell, h = rows*cell;
+  const w = cols * cell, h = rows * cell;
   const cvs = document.getElementById('game');
   const ctx = cvs.getContext('2d');
   cvs.width = w; cvs.height = h;
 
+  // HUD
   const scoreEl = document.getElementById('score');
   const bestEl  = document.getElementById('best');
   const toggleBtn = document.getElementById('toggle');
   const restartBtn= document.getElementById('restart');
 
-  const bestKey = 'mini-snake-best';
+  const bestKey = 'dog-snake-best';
   let best = Number(localStorage.getItem(bestKey) || 0);
   bestEl.textContent = best;
 
@@ -69,16 +117,16 @@
   function beep({f=600,d=0.07,type='square',v=0.2}) {
     audio(); const t=actx.currentTime, o=actx.createOscillator(), g=actx.createGain();
     o.type=type; o.frequency.setValueAtTime(f,t);
-    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+0.005);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+0.01);
     g.gain.exponentialRampToValueAtTime(0.0001,t+d);
     o.connect(g).connect(actx.destination); o.start(t); o.stop(t+d);
   }
   const sTurn = ()=>beep({f:520,d:0.05,type:'triangle',v:0.15});
-  const sEat  = ()=>{beep({f:440,d:0.06,type:'sine',v:0.22}); setTimeout(()=>beep({f:660,d:0.06,type:'sine',v:0.22}),55);};
+  const sEat  = ()=>{beep({f:420,d:0.07,type:'sine',v:0.24}); setTimeout(()=>beep({f:640,d:0.07,type:'sine',v:0.24}),60);};
 
   // ===== 상태 =====
   let snake, dir, pendingDir, food, score, speed, running, lastTime, acc;
-  let tongueTimer = 0; // 혀 깜빡임
+  let tongueTimer = 0;
 
   function init(){
     snake=[{x:10,y:10}];
@@ -134,100 +182,144 @@
 
   // ===== 그리기 =====
   function draw(){
-    // 배경
-    ctx.fillStyle=getVar('--grid'); ctx.fillRect(0,0,w,h);
-    // 은은한 점
-    ctx.fillStyle='#111827';
-    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) ctx.fillRect(x*cell,y*cell,1,1);
+    drawBoard();            // 체크무늬
+    drawMeat(food.x, food.y);
 
-    // 먹이: 사과
-    drawApple(food.x*cell, food.y*cell, cell);
-
-    // 뱀
+    // 강아지(머리 + 몸통)
     for(let i=snake.length-1;i>=0;i--){
       const p=snake[i];
-      if(i===0) drawHead(p, dir);           // 머리(눈·동공·혀)
-      else drawBody(p, i, snake.length);    // 몸통(둥근 캡슐 느낌)
+      if(i===0) drawDogHead(p, dir);
+      else      drawDogBody(p);
     }
   }
 
-  function drawBody(p, idx, total){
+  // 체스판(체크무늬) 타일 그리기
+  function drawBoard(){
+    const A = getVar('--tileA'), B = getVar('--tileB');
+    for(let y=0;y<rows;y++){
+      for(let x=0;x<cols;x++){
+        ctx.fillStyle = ((x+y)%2===0) ? A : B;
+        ctx.fillRect(x*cell, y*cell, cell, cell);
+      }
+    }
+  }
+
+  // 먹이: 드럼스틱 고기
+  function drawMeat(cx, cy){
+    const px=cx*cell, py=cy*cell, s=cell;
+    const cX=px+s/2, cY=py+s/2;
+
+    // 뼈 끝 동글 부분
+    ctx.fillStyle = getVar('--meat-fat');
+    ctx.beginPath(); ctx.arc(cX+s*0.28, cY, s*0.14, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cX+s*0.38, cY, s*0.1, 0, Math.PI*2); ctx.fill();
+
+    // 뼈 막대
+    ctx.strokeStyle = getVar('--meat-fat'); ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(cX+s*0.05, cY); ctx.lineTo(cX+s*0.3, cY); ctx.stroke();
+
+    // 살코기 (타원)
+    ctx.fillStyle = getVar('--meat');
+    ctx.beginPath();
+    ctx.ellipse(cX-s*0.1, cY, s*0.3, s*0.22, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // 하이라이트
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(cX-s*0.18, cY-3, s*0.10, s*0.07, -0.3, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // 강아지 몸통 (동그란 캡슐 느낌)
+  function drawDogBody(p){
     const x=p.x*cell, y=p.y*cell, r=cell*0.42;
-    // 몸통 그라디언트
-    const g=ctx.createRadialGradient(x+cell/2,y+cell/2, r*0.4, x+cell/2,y+cell/2, r);
-    g.addColorStop(0,getVar('--head')); g.addColorStop(1,getVar('--snake'));
+    const g=ctx.createRadialGradient(x+cell/2, y+cell/2, r*0.35, x+cell/2, y+cell/2, r);
+    g.addColorStop(0, getVar('--dog-head'));
+    g.addColorStop(1, getVar('--dog-body'));
     ctx.fillStyle=g; ctx.beginPath();
     ctx.arc(x+cell/2,y+cell/2,r,0,Math.PI*2); ctx.fill();
-    // 외곽선
-    ctx.strokeStyle=getVar('--outline'); ctx.lineWidth=2;
+
+    ctx.strokeStyle=getVar('--dog-outline'); ctx.lineWidth=2;
     ctx.beginPath(); ctx.arc(x+cell/2,y+cell/2,r,0,Math.PI*2); ctx.stroke();
-    // 비늘 점살짝
+
+    // 털 광택 점
     ctx.fillStyle='rgba(255,255,255,0.08)';
     ctx.beginPath(); ctx.arc(x+cell/2+2,y+cell/2-2,2,0,Math.PI*2); ctx.fill();
   }
 
-  function drawHead(p, dir){
+  // 강아지 머리
+  function drawDogHead(p, dir){
     const x=p.x*cell, y=p.y*cell, r=cell*0.46;
-    // 머리(그라디언트)
-    const g=ctx.createRadialGradient(x+cell/2-2*dir.x, y+cell/2-2*dir.y, r*0.35, x+cell/2, y+cell/2, r);
-    g.addColorStop(0,getVar('--head')); g.addColorStop(1,getVar('--snake'));
+    const cx=x+cell/2, cy=y+cell/2;
+
+    // 머리 그라디언트
+    const g=ctx.createRadialGradient(cx-2*dir.x, cy-2*dir.y, r*0.35, cx, cy, r);
+    g.addColorStop(0, getVar('--dog-head'));
+    g.addColorStop(1, getVar('--dog-body'));
     ctx.fillStyle=g; ctx.beginPath();
-    ctx.arc(x+cell/2,y+cell/2,r,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle=getVar('--outline'); ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(x+cell/2,y+cell/2,r,0,Math.PI*2); ctx.stroke();
+    ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
 
-    // 눈 위치(진행 방향 기준으로 좌/우 살짝 벌려서)
-    const eyeOffset = 5, eyeSide = 6;
-    const ex1 = x+cell/2 + (-dir.y)*eyeSide + dir.x*eyeOffset;
-    const ey1 = y+cell/2 + ( dir.x)*eyeSide + dir.y*eyeOffset;
-    const ex2 = x+cell/2 + ( dir.y)*eyeSide + dir.x*eyeOffset;
-    const ey2 = y+cell/2 + (-dir.x)*eyeSide + dir.y*eyeOffset;
+    // 외곽선
+    ctx.strokeStyle=getVar('--dog-outline'); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
 
-    // 흰자
+    // 귀 (진행 방향 기준 좌/우 뒤쪽에)
+    const earOffset = 6, earBack = 6;
+    drawEar(cx - dir.x*earBack + (-dir.y)*earOffset,
+            cy - dir.y*earBack + ( dir.x)*earOffset, dir, true);
+    drawEar(cx - dir.x*earBack + ( dir.y)*earOffset,
+            cy - dir.y*earBack + (-dir.x)*earOffset, dir, false);
+
+    // 눈 (방향쪽으로 살짝)
+    const eyeOffset = 6, eyeSide = 7;
+    const ex1 = cx + (-dir.y)*eyeSide + dir.x*eyeOffset;
+    const ey1 = cy + ( dir.x)*eyeSide + dir.y*eyeOffset;
+    const ex2 = cx + ( dir.y)*eyeSide + dir.x*eyeOffset;
+    const ey2 = cy + (-dir.x)*eyeSide + dir.y*eyeOffset;
+
     ctx.fillStyle='white';
     ctx.beginPath(); ctx.arc(ex1,ey1,4,0,Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(ex2,ey2,4,0,Math.PI*2); ctx.fill();
 
-    // 동공(방향쪽으로 살짝 치우치게)
+    // 동공
     const pupilShift = 1.8;
-    ctx.fillStyle='#111827';
+    ctx.fillStyle='#0b1220';
     ctx.beginPath(); ctx.arc(ex1+dir.x*pupilShift, ey1+dir.y*pupilShift, 2, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(ex2+dir.x*pupilShift, ey2+dir.y*pupilShift, 2, 0, Math.PI*2); ctx.fill();
 
-    // 혀(깜빡임): 0.2초마다 잠깐 튀어나왔다 들어감
-    const showTongue = (Math.floor(tongueTimer*5)%5===0); // 1/5 확률 프레임
+    // 코
+    const nx = cx + dir.x*(r*0.55), ny = cy + dir.y*(r*0.55);
+    ctx.fillStyle='#111827';
+    ctx.beginPath(); ctx.arc(nx, ny, 3, 0, Math.PI*2); ctx.fill();
+
+    // 혀 (간헐적)
+    const showTongue = (Math.floor(tongueTimer*5)%5===0);
     if(showTongue){
-      const tx = x+cell/2 + dir.x*(r+2);
-      const ty = y+cell/2 + dir.y*(r+2);
-      ctx.strokeStyle='#dc2626'; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(tx,ty);
-      ctx.lineTo(tx+dir.x*6, ty+dir.y*6); ctx.stroke();
-      // 혀 끝 갈라짐
+      const tx = cx + dir.x*(r+2), ty = cy + dir.y*(r+2);
+      ctx.strokeStyle=getVar('--tongue'); ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx+dir.x*7, ty+dir.y*7); ctx.stroke();
+      // 혀 끝 작게 갈라짐
       ctx.beginPath();
-      ctx.moveTo(tx+dir.x*6, ty+dir.y*6);
-      ctx.lineTo(tx+dir.x*8 + (dir.y*2), ty+dir.y*8 + (-dir.x*2));
-      ctx.moveTo(tx+dir.x*6, ty+dir.y*6);
-      ctx.lineTo(tx+dir.x*8 + (-dir.y*2), ty+dir.y*8 + ( dir.x*2));
+      ctx.moveTo(tx+dir.x*7, ty+dir.y*7);
+      ctx.lineTo(tx+dir.x*9 + (dir.y*2), ty+dir.y*9 + (-dir.x*2));
+      ctx.moveTo(tx+dir.x*7, ty+dir.y*7);
+      ctx.lineTo(tx+dir.x*9 + (-dir.y*2), ty+dir.y*9 + ( dir.x*2));
       ctx.stroke();
     }
   }
 
-  function drawApple(px, py, size){
-    const cx=px+size/2, cy=py+size/2, r=size*0.35;
-    // 본체
-    ctx.fillStyle=getVar('--food');
-    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
-    // 하이라이트
-    ctx.fillStyle='rgba(255,255,255,0.25)';
-    ctx.beginPath(); ctx.arc(cx-4,cy-4, r*0.5, 0, Math.PI*2); ctx.fill();
-    // 줄기
-    ctx.strokeStyle='#78350f'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(cx,cy-r); ctx.lineTo(cx+2,cy-r-6); ctx.stroke();
-    // 잎
-    ctx.fillStyle=getVar('--food-leaf');
+  function drawEar(x, y, dir, left){
+    ctx.fillStyle=getVar('--dog-body');
+    ctx.strokeStyle=getVar('--dog-outline');
+    ctx.lineWidth=2;
+    // 삼각 귀
     ctx.beginPath();
-    ctx.ellipse(cx+4, cy-r-6, 3, 5, -0.5, 0, Math.PI*2);
-    ctx.fill();
+    const s=6; // 귀 크기
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - dir.x*2 + ( left? -dir.y : dir.y)*s, y - dir.y*2 + ( left?  dir.x : -dir.x)*s);
+    ctx.lineTo(x - dir.x*2 + ( left?  dir.y : -dir.y)*s, y - dir.y*2 + ( left? -dir.x :  dir.x)*s);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
   }
 
   function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
@@ -243,7 +335,33 @@
   toggleBtn.addEventListener('click',toggle);
   restartBtn.addEventListener('click',()=>init());
   init();
-})();
-</script>
-</body>
-</html>
+
+  // ===== 색상 커스텀 UI =====
+  const colorA = document.getElementById('colorA');
+  const colorB = document.getElementById('colorB');
+  const resetBtn= document.getElementById('resetColors');
+
+  // 초기값 동기화 (CSS 변수 → input)
+  colorA.value = toHex(getVar('--tileA')) || '#223049';
+  colorB.value = toHex(getVar('--tileB')) || '#1a2438';
+
+  colorA.addEventListener('input', e=>{
+    document.documentElement.style.setProperty('--tileA', e.target.value);
+    draw(); // 즉시 반영
+  });
+  colorB.addEventListener('input', e=>{
+    document.documentElement.style.setProperty('--tileB', e.target.value);
+    draw();
+  });
+  resetBtn.addEventListener('click', ()=>{
+    document.documentElement.style.setProperty('--tileA', '#223049');
+    document.documentElement.style.setProperty('--tileB', '#1a2438');
+    colorA.value = '#223049';
+    colorB.value = '#1a2438';
+    draw();
+  });
+
+  // CSS rgb()/hex 모두 수용 가능한 간단 변환기
+  function toHex(cstr){
+    cstr = (cstr||'').trim();
+    if
